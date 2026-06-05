@@ -13,6 +13,14 @@ dist/
 coverage/
 # Environment variables
 .env
+.env.local
+.env.dev
+.env.development
+.env.test
+.env.qa
+.env.uat
+.env.prod
+.env.production
 # Editor directories and files
 .vscode/
 .idea/
