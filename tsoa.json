@@ -1,22 +1,35 @@
 {
+  "controllerPathGlobs": ["src/features/**/*.controller.ts"],
   "entrypoint": "src/app.ts",
   "noImplicitAdditionalProperties": "silently-remove-extras",
-  "controllerPathGlobs": ["src/features/**/*.controller.ts"],
   "routes": {
-    "routesDir": "src/generated",
+    "authenticationModule": "src/auth.ts",
+    "iocModule": "",
     "middleware": "express",
-    "iocModule": ""
+    "routesDir": "src/generated"
   },
   "spec": {
     "outputDirectory": "src/generated",
-    "specVersion": 3,
-    "specMerging": "recursive",
+    "securityDefinitions": {
+      "jwt": {
+        "type": "oauth2",
+        "description": "Enter your planner credentials to log in natively via Swagger UI.",
+        "flows": {
+          "password": {
+            "tokenUrl": "/auth/login",
+            "scopes": {}
+          }
+        }
+      }
+    },
     "spec": {
       "servers": [
         {
           "url": "http://localhost:3000"
         }
       ]
-    }
+    },
+    "specMerging": "recursive",
+    "specVersion": 3
   }
 }

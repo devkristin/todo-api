@@ -1,15 +1,22 @@
-import { Body, Controller, Post, Route, SuccessResponse, Response, Tags } from 'tsoa';
+import { Body, Controller, Post, Route, SuccessResponse, Request, Response, Tags } from 'tsoa';
 import { supabase } from '../../supabase';
+import express from 'express';
 
 export interface AuthRequest {
   email: string;
   password: string;
 }
 
+export interface SwaggerOAuth2Request {
+  username?: string;
+  password?: string;
+}
+
 export interface AuthSuccessResponse {
   message: string;
   user: unknown | null;
   session: unknown | null;
+  access_token?: string;
 }
 
 export interface ErrorResponse {
@@ -52,8 +59,11 @@ export class AuthController extends Controller {
   @SuccessResponse('200', 'OK')
   @Response<ErrorResponse>(400, 'Bad Request')
   @Response<ErrorResponse>(401, 'Unauthorized')
-  public async login(@Body() requestBody: AuthRequest): Promise<AuthSuccessResponse> {
-    const { email, password } = requestBody;
+  public async login(@Request() request: express.Request): Promise<AuthSuccessResponse> {
+    const body = request.body as AuthRequest & SwaggerOAuth2Request;
+
+    const email = body?.email || body?.username;
+    const password = body?.password;
 
     if (!email || !password) {
       this.setStatus(400);
@@ -74,6 +84,7 @@ export class AuthController extends Controller {
       message: 'Login successful',
       user: data.user,
       session: data.session,
+      access_token: data.session?.access_token,
     };
   }
 }
