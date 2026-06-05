@@ -21,7 +21,8 @@ coverage/
 *.njsproj
 *.sln
 *.sw?
-# Jest cache
-jest-cache/
+# Vitest
+.vitest/
+vitest-cache/
 # Supabase CLI
 .supabase/
