@@ -4,10 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run tsoa:build && tsc",
     "start": "node dist/server.js",
-    "dev": "tsx watch src/server.ts",
-    "test": "vitest run",
+    "dev": "npm run tsoa:build && tsx watch src/server.ts",
+    "tsoa:routes": "tsoa routes",
+    "tsoa:spec": "tsoa spec",
+    "tsoa:build": "npm run tsoa:routes && npm run tsoa:spec",
+    "test": "npm run tsoa:build && vitest run",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "repository": {
@@ -26,13 +29,16 @@
     "@supabase/supabase-js": "^2.107.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "swagger-ui-express": "^5.0.1",
+    "tsoa": "^7.0.0-alpha.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
     "@types/supertest": "^7.2.0",
+    "@types/swagger-ui-express": "^4.1.8",
     "prettier": "3.8.3",
     "supertest": "^7.2.2",
     "tsx": "^4.22.4",

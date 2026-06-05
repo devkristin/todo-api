@@ -26,3 +26,5 @@ coverage/
 vitest-cache/
 # Supabase CLI
 .supabase/
+# TSOA generated files
+src/generated/
