@@ -14,7 +14,7 @@ import {
   Response,
   Tags,
 } from 'tsoa';
-import { supabase } from '../../supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { AuthenticatedRequest } from '../../auth';
 
 export interface CreateTodoRequest {
@@ -73,6 +73,7 @@ export class TodosController extends Controller {
     isFollowUp: boolean,
     isPriority: boolean,
     scheduleDate: string,
+    supabase: SupabaseClient,
   ): Promise<number> {
     let query = supabase.from('todo').select('position').eq('user_id', userId);
 
@@ -107,7 +108,7 @@ export class TodosController extends Controller {
     @Query() isPriority?: boolean,
     @Query() isFollowUp?: boolean,
   ): Promise<TodoResponse[]> {
-    let query = supabase.from('todo').select('*').eq('user_id', request.user.id);
+    let query = request.supabase.from('todo').select('*').eq('user_id', request.user.id);
 
     if (date) query = query.eq('schedule_date', date);
     if (isPriority !== undefined) query = query.eq('is_priority', isPriority);
@@ -131,7 +132,7 @@ export class TodosController extends Controller {
     @Request() request: AuthenticatedRequest,
     @Query() date: string,
   ): Promise<TodoResponse[]> {
-    const { data, error } = await supabase
+    const { data, error } = await request.supabase
       .from('todo')
       .select('*')
       .eq('user_id', request.user.id)
@@ -167,6 +168,7 @@ export class TodosController extends Controller {
         isFollowUp,
         isPriority,
         scheduleDate,
+        request.supabase,
       );
     } catch (err: any) {
       this.setStatus(400);
@@ -183,7 +185,7 @@ export class TodosController extends Controller {
       position: nextPosition,
     };
 
-    const { data, error } = await supabase.from('todo').insert([newTodo]).select('*').single();
+    const { data, error } = await request.supabase.from('todo').insert([newTodo]).select('*').single();
 
     if (error) {
       this.setStatus(400);
@@ -204,7 +206,7 @@ export class TodosController extends Controller {
     @Path() id: string,
     @Body() requestBody: UpdateTodoRequest,
   ): Promise<TodoResponse> {
-    const { data: currentTodo, error: fetchError } = await supabase
+    const { data: currentTodo, error: fetchError } = await request.supabase
       .from('todo')
       .select('*')
       .eq('id', id)
@@ -239,6 +241,7 @@ export class TodosController extends Controller {
           targetFollowUp,
           targetPriority,
           targetDate,
+          request.supabase,
         );
       } catch (err: any) {
         this.setStatus(400);
@@ -246,7 +249,7 @@ export class TodosController extends Controller {
       }
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await request.supabase
       .from('todo')
       .update(updates)
       .eq('id', id)
@@ -291,7 +294,7 @@ export class TodosController extends Controller {
       targetPosition = DEFAULT_START_POSITION;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await request.supabase
       .from('todo')
       .update({ position: targetPosition })
       .eq('id', id)
@@ -322,7 +325,7 @@ export class TodosController extends Controller {
     @Request() request: AuthenticatedRequest,
     @Path() id: string,
   ): Promise<void> {
-    const { error, count } = await supabase
+    const { error, count } = await request.supabase
       .from('todo')
       .delete({ count: 'exact' })
       .eq('id', id)

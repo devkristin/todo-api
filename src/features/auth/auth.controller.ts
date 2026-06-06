@@ -1,5 +1,5 @@
 import { Body, Controller, Post, Route, SuccessResponse, Request, Response, Tags } from 'tsoa';
-import { supabase } from '../../supabase';
+import { supabaseAuth as supabase } from '../../supabase';
 import express from 'express';
 
 export interface AuthRequest {

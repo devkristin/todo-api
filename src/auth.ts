@@ -1,9 +1,10 @@
 import * as express from 'express';
-import { supabase } from './supabase';
-import { User } from '@supabase/supabase-js';
+import { supabaseAdmin, createSupabaseClient } from './supabase';
+import type { SupabaseClient, User } from '@supabase/supabase-js';
 
 export interface AuthenticatedRequest extends express.Request {
   user: User;
+  supabase: SupabaseClient;
 }
 
 export async function expressAuthentication(
@@ -25,11 +26,15 @@ export async function expressAuthentication(
   const {
     data: { user },
     error,
-  } = await supabase.auth.getUser(token);
+  } = await supabaseAdmin.auth.getUser(token);
 
   if (error || !user) {
     throw new Error('Invalid or expired token');
   }
+
+  const authenticatedRequest = request as AuthenticatedRequest;
+  authenticatedRequest.user = user;
+  authenticatedRequest.supabase = createSupabaseClient(token);
 
   return user;
 }

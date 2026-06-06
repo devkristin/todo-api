@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { RegisterRoutes } from './generated/routes';
-import { supabase } from './supabase';
+import supabase from './supabase';
 import swaggerUi from 'swagger-ui-express';
 import fs from 'fs';
 import path from 'path';
