@@ -31,6 +31,7 @@ export interface UpdateTodoRequest {
   schedule_time?: string | null;
   is_priority?: boolean;
   is_follow_up?: boolean;
+  is_completed?: boolean;
 }
 
 export interface MoveTodoPositionRequest {
@@ -208,7 +209,7 @@ export class TodosController extends Controller {
       .select('*')
       .eq('id', id)
       .eq('user_id', request.user.id)
-      .maybeSingle();
+      .single();
 
     if (fetchError || !currentTodo) {
       this.setStatus(fetchError ? 400 : 404);
@@ -256,6 +257,11 @@ export class TodosController extends Controller {
     if (error) {
       this.setStatus(400);
       throw new Error(error.message);
+    }
+
+    if (!data) {
+      this.setStatus(404);
+      throw new Error('Update failed: Item not found or unauthorized');
     }
 
     return data;
