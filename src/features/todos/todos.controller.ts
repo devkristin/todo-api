@@ -26,12 +26,15 @@ export interface CreateTodoRequest {
 }
 
 export interface UpdateTodoRequest {
-  title?: string;
-  schedule_date?: string;
-  schedule_time?: string | null;
-  is_priority?: boolean;
-  is_follow_up?: boolean;
-  is_completed?: boolean;
+  todo: Partial<{
+    title?: string;
+    schedule_date?: string;
+    schedule_time?: string | null;
+    is_priority?: boolean;
+    is_follow_up?: boolean;
+    is_completed?: boolean;
+  }>;
+  position_change?: MoveTodoPositionRequest;
 }
 
 export interface MoveTodoPositionRequest {
@@ -66,7 +69,27 @@ const DEFAULT_START_POSITION = 1.0;
 @Response<TodoErrorResponse>(401, 'Unauthorized')
 export class TodosController extends Controller {
   /**
+   * Helper function to calculate a moved todo's target position using floating-point fractional indexing
+   * e.g. when a todo is dragged into a different position in a list
+   */
+  private calculateTodoPosition(
+    aboveTodoPosition: number | null,
+    belowTodoPosition: number | null,
+  ): number {
+    if (aboveTodoPosition !== null && belowTodoPosition !== null) {
+      return (aboveTodoPosition + belowTodoPosition) / 2;
+    } else if (aboveTodoPosition !== null) {
+      return aboveTodoPosition + 1.0;
+    } else if (belowTodoPosition !== null) {
+      return belowTodoPosition / 2;
+    } else {
+      return DEFAULT_START_POSITION;
+    }
+  }
+
+  /**
    * Helper function to find the next append position depending on the todos type
+   * e.g. when a todo gets added to the end of a list
    */
   private async getNextAppendPosition(
     userId: string,
@@ -185,7 +208,11 @@ export class TodosController extends Controller {
       position: nextPosition,
     };
 
-    const { data, error } = await request.supabase.from('todo').insert([newTodo]).select('*').single();
+    const { data, error } = await request.supabase
+      .from('todo')
+      .insert([newTodo])
+      .select('*')
+      .single();
 
     if (error) {
       this.setStatus(400);
@@ -197,7 +224,10 @@ export class TodosController extends Controller {
   }
 
   /**
-   * Update a specific todo item and recalculate position if its list group context changes
+   * Update a specific todo item and determine its target position when applicable
+   * If its position changes (e.g. a todo has been dragged and dropped) calculate the position based on the todo before and after it
+   * If only its list group context changes (e.g. a todo has been marked as priority) add it to the end of the new list
+   * Then update the changed details of the todo
    */
   @Put('{id}')
   @Response<TodoErrorResponse>(404, 'Not Found')
@@ -218,23 +248,31 @@ export class TodosController extends Controller {
       throw new Error(fetchError ? fetchError.message : 'Todo item not found');
     }
 
-    const updates: Partial<TodoResponse> = { ...requestBody };
+    const updates: Partial<TodoResponse> = { ...requestBody.todo };
 
-    // Detect changes across any of the boundaries that define a unique layout list
+    const positionChange = requestBody.position_change;
+
     const isChangingFollowUp =
-      requestBody.is_follow_up !== undefined &&
-      requestBody.is_follow_up !== currentTodo.is_follow_up;
+      requestBody.todo.is_follow_up !== undefined &&
+      requestBody.todo.is_follow_up !== currentTodo.is_follow_up;
     const isChangingPriority =
-      requestBody.is_priority !== undefined && requestBody.is_priority !== currentTodo.is_priority;
+      requestBody.todo.is_priority !== undefined &&
+      requestBody.todo.is_priority !== currentTodo.is_priority;
     const isChangingDates =
-      requestBody.schedule_date !== undefined &&
-      requestBody.schedule_date !== currentTodo.schedule_date;
+      requestBody.todo.schedule_date !== undefined &&
+      requestBody.todo.schedule_date !== currentTodo.schedule_date;
 
-    if (isChangingFollowUp || isChangingPriority || isChangingDates) {
+    const contextChange = isChangingFollowUp || isChangingPriority || isChangingDates;
+
+    if (positionChange) {
+      const { aboveTodoPosition, belowTodoPosition } = positionChange;
+      const targetPosition = this.calculateTodoPosition(aboveTodoPosition, belowTodoPosition);
+      updates.position = targetPosition;
+    } else if (contextChange) {
       try {
-        const targetFollowUp = requestBody.is_follow_up ?? currentTodo.is_follow_up;
-        const targetPriority = requestBody.is_priority ?? currentTodo.is_priority;
-        const targetDate = requestBody.schedule_date ?? currentTodo.schedule_date;
+        const targetFollowUp = requestBody.todo.is_follow_up ?? currentTodo.is_follow_up;
+        const targetPriority = requestBody.todo.is_priority ?? currentTodo.is_priority;
+        const targetDate = requestBody.todo.schedule_date ?? currentTodo.schedule_date;
 
         updates.position = await this.getNextAppendPosition(
           request.user.id,
@@ -282,17 +320,7 @@ export class TodosController extends Controller {
     @Body() requestBody: MoveTodoPositionRequest,
   ): Promise<TodoResponse> {
     const { aboveTodoPosition, belowTodoPosition } = requestBody;
-    let targetPosition: number;
-
-    if (aboveTodoPosition !== null && belowTodoPosition !== null) {
-      targetPosition = (aboveTodoPosition + belowTodoPosition) / 2;
-    } else if (aboveTodoPosition !== null) {
-      targetPosition = aboveTodoPosition + 1.0;
-    } else if (belowTodoPosition !== null) {
-      targetPosition = belowTodoPosition / 2;
-    } else {
-      targetPosition = DEFAULT_START_POSITION;
-    }
+    const targetPosition = this.calculateTodoPosition(aboveTodoPosition, belowTodoPosition);
 
     const { data, error } = await request.supabase
       .from('todo')
