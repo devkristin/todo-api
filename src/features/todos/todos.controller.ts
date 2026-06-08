@@ -19,7 +19,7 @@ import { AuthenticatedRequest } from '../../auth';
 
 export interface CreateTodoRequest {
   schedule_date: string; // YYYY-MM-DD
-  schedule_time?: string; // HH:MM:SS
+  schedule_time?: string | null; // HH:MM:SS
   title: string;
   is_priority?: boolean;
   is_follow_up?: boolean;

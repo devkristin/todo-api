@@ -1,4 +1,7 @@
 {
+  "compilerOptions": {
+    "strict": true
+  },
   "controllerPathGlobs": ["src/features/**/*.controller.ts"],
   "entrypoint": "src/app.ts",
   "noImplicitAdditionalProperties": "silently-remove-extras",
@@ -12,14 +15,14 @@
     "outputDirectory": "src/generated",
     "securityDefinitions": {
       "jwt": {
-        "type": "oauth2",
         "description": "Enter your planner credentials to log in natively via Swagger UI.",
         "flows": {
           "password": {
-            "tokenUrl": "/auth/login",
-            "scopes": {}
+            "scopes": {},
+            "tokenUrl": "/auth/login"
           }
-        }
+        },
+        "type": "oauth2"
       }
     },
     "spec": {
