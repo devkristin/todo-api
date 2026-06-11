@@ -70,6 +70,8 @@ Built with Node.js, TypeScript, Express, TSOA, and a local Docker environment vi
 
 1. Start Supabase
 
+   Ensure Docker Desktop is active, then spin up Supabase
+
    ```
    npx supabase start
    ```
