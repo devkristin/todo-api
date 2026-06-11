@@ -66,34 +66,50 @@ Built with Node.js, TypeScript, Express, TSOA, and a local Docker environment vi
    npx supabase stop
    ```
 
-## Daily Workflow
+## Database Migrations
 
-1. Start Supabase
+Use the Supabase CLI to manage database schema changes
 
-   Ensure Docker Desktop is active, then spin up Supabase
+1. Create a New Migration
 
-   ```
-   npx supabase start
-   ```
-
-   - Access Supabase Studio at: http://localhost:54323
-
-2. Run the API Server
+   Generate a new blank migration file in the supabase/migrations/ directory to write your SQL changes
 
    ```
-   npm run dev
+   npx supabase migration new <migration_name>
    ```
 
-   - Access Swagger at: http://localhost:3000
+2. Apply Migrations Locally
 
-3. Run Tests
-
-   ```
-   npm run test
-   ```
-
-4. Stop Supabase
+   Execute pending migration files against your running local database without wiping existing test data
 
    ```
-   npx supabase stop
+   npx supabase migration up
+   ```
+
+3. Optionally Reset Local Database (Destructive)
+
+   Cleanly wipe the local database state, re-run all migration files in chronological order from scratch, and automatically execute seed.sql to generate test data
+
+   ```
+   npx supabase db reset
+   ```
+
+4. Deploy to Production
+
+   Login to supabase
+
+   ```
+   npx supabase login
+   ```
+
+   Link to your remote project
+
+   ```
+   supabase link
+   ```
+
+   Push unapplied migrations to the remote live production database
+
+   ```
+   npx supabase db push
    ```
