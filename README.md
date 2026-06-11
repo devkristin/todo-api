@@ -1,6 +1,6 @@
 # Todo List API
 
-REST API for a custom Daily Planner and Todo List application.
+REST API for Lotus List, a custom Daily Planner and Todo List application.
 
 Built with Node.js, TypeScript, Express, TSOA, and a local Docker environment via the Supabase CLI.
 
